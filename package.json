@@ -2,12 +2,8 @@
   "name": "revo-calendar",
   "version": "3.2.3",
   "description": "React Event Calendar Component",
-  "author": {
-    "name": "Gabriel Molter",
-    "url": "https://gabrielmolter.com/"
-  },
+  "author": "Gabriel Molter (https://gabrielmolter.com/)",
   "license": "MIT",
-  "repository": "gjmolter/revo-calendar",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "source": "src/index.tsx",
@@ -16,22 +12,14 @@
     "test-coverage": "jest --coverage",
     "build": "rollup -c"
   },
-  "homepage": "https://gjmolter.github.io/revo-calendar/",
-  "keywords": [
-    "event",
-    "calendar",
-    "modern",
-    "responsive",
-    "react",
-    "customizable"
-  ],
+  "peerDependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "styled-components": "^5.3.11"
+  },
   "dependencies": {
     "@babel/runtime": "^7.14.0",
-    "styled-components": "^5.3.0"
-  },
-  "peerDependencies": {
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "styled-components": "^5.3.11"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.3",
@@ -48,15 +36,13 @@
     "@types/styled-components": "^5.1.9",
     "babel-plugin-styled-components": "^2.0.1",
     "jest": "^27.3.1",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-test-renderer": "^17.0.2",
     "rollup": "^2.50.2",
     "rollup-plugin-terser": "^7.0.2",
     "tslib": "^2.3.1",
     "typescript": "^4.3.2"
   },
-  "files": [
-    "dist"
-  ]
+  "files": ["dist"]
 }
