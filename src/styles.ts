@@ -1,10 +1,7 @@
-/* istanbul ignore file */
-//Ignoring jest coverage on this file
-
 import styled, { css, keyframes } from "styled-components";
 import { CloseDetailProps, DayButtonProps, DayProps, DetailsProps, MonthButtonProps, SidebarProps } from "./typings";
 
-//Animations
+// Animations
 const slide = (w: string, inOut: boolean) => keyframes`
     from {
       width: ${inOut ? "0px" : w};
@@ -15,6 +12,7 @@ const slide = (w: string, inOut: boolean) => keyframes`
       min-width: ${inOut ? w : "0px"};
     }
 `;
+
 const slideToggler = (v: string, lr: string, inOut: boolean) => keyframes`
     from {
         ${
@@ -38,10 +36,9 @@ const slideToggler = (v: string, lr: string, inOut: boolean) => keyframes`
         `
         }
     }
-  `;
+`;
 
-//Components
-
+// Components
 export const Calendar = styled.div`
   width: 100%;
   display: flex;
@@ -188,7 +185,7 @@ export const DayButton = styled.button<DayButtonProps>`
   min-width: 32px;
   min-height: 32px;
   background: ${(props) => (props.current ? `${props.theme.primaryColor} !important` : "none")};
-  border: ${(props) => (props.today ? `2px solid ${props.theme.todayColor} !important` : "none")};
+  border: ${(props) => (props.today && props.enableHighlight ? `2px solid ${props.theme.todayColor} !important` : "none")};
   font-size: min(1rem, 5vw);
   color: ${(props) => (props.current ? `${props.theme.secondaryColor} !important` : props.theme.textColor)};
   position: relative;
