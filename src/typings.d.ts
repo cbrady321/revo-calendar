@@ -14,6 +14,7 @@ export interface Events {
   extra?: {
     icon?: string;
     text: string;
+    color?: string; // New color field
   };
 }
 

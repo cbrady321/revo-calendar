@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { FC } from "react";
+import DayButtonComponent from './components/DayButton';
 import helperFunctions from "./helpers/functions";
 import translations from "./helpers/translations";
 import type { Props } from "./typings";
@@ -9,14 +10,18 @@ import {
   CloseDetail,
   CloseSidebar,
   Day,
-  DayButton,
   Details,
   Event,
   Inner,
   MonthButton,
   Sidebar,
 } from "./styles";
-import { CHEVRON_ICON_SVG, CLOCK_ICON_SVG, DETAILS_ICON_SVG, SIDEBAR_ICON_SVG } from "./helpers/consts";
+import {
+  CHEVRON_ICON_SVG,
+  CLOCK_ICON_SVG,
+  DETAILS_ICON_SVG,
+  SIDEBAR_ICON_SVG,
+} from "./helpers/consts";
 
 // -1 = ANIMATE CLOSING | 0 = NOTHING | 1 = ANIMATE OPENING
 let animatingSidebar = 0;
@@ -62,6 +67,12 @@ const RevoCalendarInner: FC<Props> = ({
 
   const calendarRef = useRef<HTMLDivElement>(null);
   const [calendarWidth, setCalendarWidth] = useState<number>(0);
+  const [currentDay, setDay] = useState(date.getDate());
+  const [currentMonth, setMonth] = useState(date.getMonth());
+  const [currentYear, setYear] = useState(date.getFullYear());
+  const [sidebarOpen, setSidebarState] = useState(sidebarDefault);
+  const [detailsOpen, setDetailsState] = useState(detailDefault);
+  const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
 
   useEffect(() => {
     const updateSize = () => {
@@ -82,29 +93,10 @@ const RevoCalendarInner: FC<Props> = ({
     };
   }, []);
 
-  let adjustedOnePanelAtATime = onePanelAtATime;
-  if (calendarWidth <= 320 + sidebarWidth + detailWidth) {
-    adjustedOnePanelAtATime = true;
-    if (sidebarDefault && detailDefault) {
-      detailDefault = false;
-    }
-  }
-
-  const floatingPanels = calendarWidth <= 320 + sidebarWidth || calendarWidth <= 320 + detailWidth;
-  const adjustedSidebarWidth = calendarWidth < sidebarWidth + 50 ? calendarWidth - 50 : sidebarWidth;
-  const adjustedDetailWidth = calendarWidth < detailWidth + 50 ? calendarWidth - 50 : detailWidth;
-
   if (!helperFunctions.isValidDate(date)) {
     console.warn("The passed date prop is invalid, using current date");
     date = new Date();
   }
-
-  const [currentDay, setDay] = useState(date.getDate());
-  const [currentMonth, setMonth] = useState(date.getMonth());
-  const [currentYear, setYear] = useState(date.getFullYear());
-  const [sidebarOpen, setSidebarState] = useState(sidebarDefault);
-  const [detailsOpen, setDetailsState] = useState(detailDefault);
-  const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
 
   useEffect(() => {
     dateSelected({
@@ -115,15 +107,15 @@ const RevoCalendarInner: FC<Props> = ({
   }, [currentDay, currentMonth, currentYear, dateSelected]);
 
   useEffect(() => {
-    if (sidebarOpen && detailsOpen && adjustedOnePanelAtATime) {
+    if (sidebarOpen && detailsOpen && onePanelAtATime) {
       animatingDetail = -1;
       setDetailsState(false);
     }
-  }, [calendarWidth, sidebarOpen, detailsOpen, adjustedOnePanelAtATime]);
+  }, [calendarWidth, sidebarOpen, detailsOpen, onePanelAtATime]);
 
   const toggleSidebar = () => {
     if (animatingSidebar !== 0) return;
-    if (!sidebarOpen && detailsOpen && adjustedOnePanelAtATime) {
+    if (!sidebarOpen && detailsOpen && onePanelAtATime) {
       animatingDetail = -1;
       setDetailsState(false);
     }
@@ -136,7 +128,7 @@ const RevoCalendarInner: FC<Props> = ({
 
   const toggleDetail = () => {
     if (animatingDetail !== 0) return;
-    if (!detailsOpen && sidebarOpen && adjustedOnePanelAtATime) {
+    if (!detailsOpen && sidebarOpen && onePanelAtATime) {
       animatingSidebar = -1;
       setSidebarState(false);
     }
@@ -178,83 +170,67 @@ const RevoCalendarInner: FC<Props> = ({
     }
   };
 
+  const renderDay = (day: number, firstWeekDay: number) => {
+    const dayEvents = events.filter(event => {
+      const eventDate = new Date(event.date);
+      return (
+        eventDate.getDate() === day &&
+        eventDate.getMonth() === currentMonth &&
+        eventDate.getFullYear() === currentYear
+      );
+    });
+
+    return (
+      <Day key={day} firstDay={day === 1} firstOfMonth={firstWeekDay + 1}>
+        <DayButtonComponent
+          day={day}
+          current={currentDay === day}
+          today={helperFunctions.isToday(day, currentMonth, currentYear)}
+          enableHighlight={enableHighlightToday}
+          events={dayEvents}
+          onClick={() => handleDayClick(day)}
+          eventGridRows={2}  // Configurable
+          eventGridCols={3}  // Configurable
+        />
+      </Day>
+    );
+  };
+
   const renderSidebar = () => {
-    return (
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        animatingIn={animatingSidebar === 1}
-        animatingOut={animatingSidebar === -1}
-      >
-        <div>
-          <button onClick={() => handleYearClick(-1)}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 8 8">
-              <path fill="currentColor" d={CHEVRON_ICON_SVG} transform="rotate(-90 4 4)" />
-            </svg>
-          </button>
-          <span>{currentYear}</span>
-          <button onClick={() => handleYearClick(1)}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 8 8">
-              <path fill="currentColor" d={CHEVRON_ICON_SVG} transform="rotate(90 4 4)" />
-            </svg>
-          </button>
-        </div>
-        <ul>
-          {languages[lang].months.map((month: string, index: number) => (
-            <li key={month}>
-              <MonthButton current={currentMonth === index} onClick={() => handleMonthClick(index)}>
-                {month}
-              </MonthButton>
-            </li>
-          ))}
-        </ul>
-      </Sidebar>
-    );
-  };
-
-  const renderInner = () => {
-    const firstWeekDay = helperFunctions.getFirstWeekDayOfMonth(currentMonth, currentYear);
-    const daysInMonth = helperFunctions.isLeapYear(currentYear)[currentMonth];
-
-    return (
-      <Inner>
-        <div>
+      return (
+        <Sidebar
+          sidebarOpen={sidebarOpen}
+          animatingIn={animatingSidebar === 1}
+          animatingOut={animatingSidebar === -1}
+        >
           <div>
-            {languages[lang].daysMin.map((day: string) => (
-              <div key={day}>{day}</div>
+            <button onClick={() => handleYearClick(-1)}>
+              <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 8 8">
+                <path fill="currentColor" d={CHEVRON_ICON_SVG} transform="rotate(-90 4 4)" />
+              </svg>
+            </button>
+            <span>{currentYear}</span>
+            <button onClick={() => handleYearClick(1)}>
+              <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 8 8">
+                <path fill="currentColor" d={CHEVRON_ICON_SVG} transform="rotate(90 4 4)" />
+              </svg>
+            </button>
+          </div>
+          <ul>
+            {languages[lang].months.map((month: string, index: number) => (
+              <li key={month}>
+                <MonthButton current={currentMonth === index} onClick={() => handleMonthClick(index)}>
+                  {month}
+                </MonthButton>
+              </li>
             ))}
-          </div>
-          <div>
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
-              const hasEvent = events.some((event) => {
-                const eventDate = new Date(event.date);
-                return (
-                  eventDate.getDate() === day &&
-                  eventDate.getMonth() === currentMonth &&
-                  eventDate.getFullYear() === currentYear
-                );
-              });
-
-              return (
-                <Day key={day} firstDay={day === 1} firstOfMonth={firstWeekDay + 1}>
-                  <DayButton
-                    current={currentDay === day}
-                    enableHighlight={enableHighlightToday}
-                    today={helperFunctions.isToday(day, currentMonth, currentYear)}
-                    hasEvent={hasEvent}
-                    onClick={() => handleDayClick(day)}
-                  >
-                    <span>{day}</span>
-                  </DayButton>
-                </Day>
-              );
-            })}
-          </div>
-        </div>
-      </Inner>
-    );
-  };
+          </ul>
+        </Sidebar>
+      );
+    };
 
   const renderDetails = () => {
+    const floatingPanels = calendarWidth <= 320 + sidebarWidth || calendarWidth <= 320 + detailWidth;
     const currentDate = new Date(currentYear, currentMonth, currentDay);
     const todayEvents = events.filter((event) => {
       const eventDate = new Date(event.date);
@@ -299,7 +275,7 @@ const RevoCalendarInner: FC<Props> = ({
                     </span>
                   </div>
                   {event.extra && (
-                    <div>
+                    <div style={{ color: event.extra.color || indicatorColorRGB }}>
                       <svg xmlns="http://www.w3.org/2000/svg" height="15" width="15" viewBox="0 0 24 24">
                         <path fill="currentColor" d={event.extra.icon} />
                       </svg>
@@ -318,6 +294,28 @@ const RevoCalendarInner: FC<Props> = ({
     );
   };
 
+  const renderInner = () => {
+    const firstWeekDay = helperFunctions.getFirstWeekDayOfMonth(currentMonth, currentYear);
+    const daysInMonth = helperFunctions.isLeapYear(currentYear)[currentMonth];
+
+    return (
+      <Inner>
+        <div>
+          <div>
+            {languages[lang].daysMin.map((day: string) => (
+              <div key={day}>{day}</div>
+            ))}
+          </div>
+          <div>
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) =>
+              renderDay(day, firstWeekDay)
+            )}
+          </div>
+        </div>
+      </Inner>
+    );
+  };
+
   return (
     <ThemeProvider
       theme={{
@@ -328,8 +326,8 @@ const RevoCalendarInner: FC<Props> = ({
         textColor: textColorRGB,
         indicatorColor: indicatorColorRGB,
         animationSpeed: `${animationSpeed}ms`,
-        sidebarWidth: `${adjustedSidebarWidth}px`,
-        detailWidth: `${adjustedDetailWidth}px`,
+        sidebarWidth: `${sidebarWidth}px`,
+        detailWidth: `${detailWidth}px`,
       }}
     >
       <Calendar className={className} ref={calendarRef} style={style}>
